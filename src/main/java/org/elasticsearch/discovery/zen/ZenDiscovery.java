@@ -310,7 +310,7 @@ public class ZenDiscovery extends AbstractLifecycleComponent<Discovery> implemen
             if (localNode.equals(masterNode)) {
                 this.master = true;
                 nodesFD.start(); // start the nodes FD
-                clusterService.submitStateUpdateTask("zen-disco-join (elected_as_master)", Priority.URGENT, new ProcessedClusterStateUpdateTask() {
+                clusterService.submitStateUpdateTask("zen-disco-join (elected_as_master)", Priority.URGENT, new ProcessedClusterStateNonMasterUpdateTask() {
                     @Override
                     public ClusterState execute(ClusterState currentState) {
                         // Take into account the previous known nodes, if they happen not to be available
@@ -332,7 +332,7 @@ public class ZenDiscovery extends AbstractLifecycleComponent<Discovery> implemen
 
                     @Override
                     public void onFailure(String source, Throwable t) {
-                        logger.error("unexpected failure during [{}]", t, source);
+                            logger.error("unexpected failure during [{}]", t, source);
                     }
 
                     @Override
@@ -396,7 +396,12 @@ public class ZenDiscovery extends AbstractLifecycleComponent<Discovery> implemen
 
                 @Override
                 public void onFailure(String source, Throwable t) {
-                    logger.error("unexpected failure during [{}]", t, source);
+                    if (t instanceof ClusterService.NoLongerMasterException) {
+                        logger.debug("not processing {} leave request as we are no longer master", node);
+                    }
+                    else {
+                        logger.error("unexpected failure during [{}]", t, source);
+                    }
                 }
             });
         } else {
@@ -431,7 +436,12 @@ public class ZenDiscovery extends AbstractLifecycleComponent<Discovery> implemen
 
             @Override
             public void onFailure(String source, Throwable t) {
-                logger.error("unexpected failure during [{}]", t, source);
+                if (t instanceof ClusterService.NoLongerMasterException) {
+                    logger.debug("not processing [{}] as we are no longer master", source);
+                }
+                else {
+                    logger.error("unexpected failure during [{}]", t, source);
+                }
             }
 
             @Override
@@ -464,7 +474,12 @@ public class ZenDiscovery extends AbstractLifecycleComponent<Discovery> implemen
 
             @Override
             public void onFailure(String source, Throwable t) {
-                logger.error("unexpected failure during [{}]", t, source);
+                if (t instanceof ClusterService.NoLongerMasterException) {
+                    logger.debug("not processing [{}] as we are no longer master", source);
+                }
+                else {
+                    logger.error("unexpected failure during [{}]", t, source);
+                }
             }
 
             @Override
@@ -486,7 +501,7 @@ public class ZenDiscovery extends AbstractLifecycleComponent<Discovery> implemen
 
         logger.info("master_left [{}], reason [{}]", masterNode, reason);
 
-        clusterService.submitStateUpdateTask("zen-disco-master_failed (" + masterNode + ")", Priority.IMMEDIATE, new ProcessedClusterStateUpdateTask() {
+        clusterService.submitStateUpdateTask("zen-disco-master_failed (" + masterNode + ")", Priority.IMMEDIATE, new ProcessedClusterStateNonMasterUpdateTask() {
             @Override
             public ClusterState execute(ClusterState currentState) {
                 if (!masterNode.id().equals(currentState.nodes().masterNodeId())) {
@@ -610,7 +625,7 @@ public class ZenDiscovery extends AbstractLifecycleComponent<Discovery> implemen
                 final ProcessClusterState processClusterState = new ProcessClusterState(newClusterState, newStateProcessed);
                 processNewClusterStates.add(processClusterState);
 
-                clusterService.submitStateUpdateTask("zen-disco-receive(from master [" + newClusterState.nodes().masterNode() + "])", Priority.URGENT, new ProcessedClusterStateUpdateTask() {
+                clusterService.submitStateUpdateTask("zen-disco-receive(from master [" + newClusterState.nodes().masterNode() + "])", Priority.URGENT, new ProcessedClusterStateNonMasterUpdateTask() {
                     @Override
                     public ClusterState execute(ClusterState currentState) {
                         // we already processed it in a previous event
@@ -752,7 +767,12 @@ public class ZenDiscovery extends AbstractLifecycleComponent<Discovery> implemen
 
                 @Override
                 public void onFailure(String source, Throwable t) {
-                    logger.error("unexpected failure during [{}]", t, source);
+                    if (t instanceof ClusterService.NoLongerMasterException) {
+                        logger.debug("not processing [{}] as we are no longer master", source);
+                    }
+                    else {
+                        logger.error("unexpected failure during [{}]", t, source);
+                    }
                 }
             });
         }
@@ -945,7 +965,7 @@ public class ZenDiscovery extends AbstractLifecycleComponent<Discovery> implemen
 
         @Override
         public void messageReceived(final RejoinClusterRequest request, final TransportChannel channel) throws Exception {
-            clusterService.submitStateUpdateTask("received a request to rejoin the cluster from [" + request.fromNodeId + "]", Priority.URGENT, new ClusterStateUpdateTask() {
+            clusterService.submitStateUpdateTask("received a request to rejoin the cluster from [" + request.fromNodeId + "]", Priority.URGENT, new ClusterStateNonMasterUpdateTask() {
                 @Override
                 public ClusterState execute(ClusterState currentState) {
                     try {
