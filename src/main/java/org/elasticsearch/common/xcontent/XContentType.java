@@ -104,7 +104,22 @@ public enum XContentType {
         public XContent xContent() {
             return CborXContent.cborXContent;
         }
-    },;
+    }, FILEPATH(4){
+        @Override
+        public String restContentType() {
+            return "application/filepath";
+        }
+
+        @Override
+        public String shortName() {
+            return "filepath";
+        }
+
+        @Override
+        public XContent xContent() {
+            return null;
+        }
+    };
 
     public static XContentType fromRestContentType(String contentType) {
         if (contentType == null) {

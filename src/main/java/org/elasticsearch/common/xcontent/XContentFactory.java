@@ -118,7 +118,7 @@ public class XContentFactory {
      * Returns a binary content builder for the provided content type.
      */
     public static XContentBuilder contentBuilder(XContentType type) throws IOException {
-        if (type == XContentType.JSON) {
+        if (type == XContentType.JSON || type == XContentType.FILEPATH) {
             return JsonXContent.contentBuilder();
         } else if (type == XContentType.SMILE) {
             return SmileXContent.contentBuilder();
