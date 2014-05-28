@@ -41,6 +41,8 @@ import org.elasticsearch.cluster.action.shard.ShardStateAction;
 import org.elasticsearch.cluster.block.ClusterBlockException;
 import org.elasticsearch.cluster.block.ClusterBlockLevel;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.cluster.node.DiscoveryNode;
+import org.elasticsearch.cluster.node.DiscoveryNodes;
 import org.elasticsearch.cluster.routing.ShardIterator;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -438,8 +440,13 @@ public class TransportShardBulkAction extends TransportShardReplicationOperation
 
         assert indexRequest.versionType().validateVersionForWrites(indexRequest.version());
 
+        final DiscoveryNodes nodes = clusterState.nodes();
 
-        IndexResponse indexResponse = new IndexResponse(indexRequest.index(), indexRequest.type(), indexRequest.id(), version, created);
+        DiscoveryNode shard1 = nodes.dataNodes().get(indexShard.routingEntry().currentNodeId());
+
+        String shards[] = { shard1.getHostAddress() };
+
+        IndexResponse indexResponse = new IndexResponse(indexRequest.index(), indexRequest.type(), indexRequest.id(), shards, version, created);
         return new WriteResult(indexResponse, mappingsToUpdate, op);
     }
 

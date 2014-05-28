@@ -106,6 +106,7 @@ public class RestIndexAction extends BaseRestHandler {
             @Override
             public RestResponse buildResponse(IndexResponse response, XContentBuilder builder) throws Exception {
                 builder.startObject()
+                        .field(Fields._SHARDS, response.getShards())
                         .field(Fields._INDEX, response.getIndex())
                         .field(Fields._TYPE, response.getType())
                         .field(Fields._ID, response.getId())
@@ -122,6 +123,7 @@ public class RestIndexAction extends BaseRestHandler {
     }
 
     static final class Fields {
+        static final XContentBuilderString _SHARDS = new XContentBuilderString("_shards");
         static final XContentBuilderString _INDEX = new XContentBuilderString("_index");
         static final XContentBuilderString _TYPE = new XContentBuilderString("_type");
         static final XContentBuilderString _ID = new XContentBuilderString("_id");

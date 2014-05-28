@@ -38,14 +38,16 @@ public class IndexResponse extends ActionResponse {
     private String type;
     private long version;
     private boolean created;
+    private String[] shards;
 
     public IndexResponse() {
 
     }
 
-    public IndexResponse(String index, String type, String id, long version, boolean created) {
+    public IndexResponse(String index, String type, String id, String[] shards, long version, boolean created) {
         this.index = index;
         this.id = id;
+        this.shards = shards;
         this.type = type;
         this.version = version;
         this.created = created;
@@ -92,6 +94,7 @@ public class IndexResponse extends ActionResponse {
         index = in.readSharedString();
         type = in.readSharedString();
         id = in.readString();
+        shards = in.readStringArray();
         version = in.readLong();
         created = in.readBoolean();
     }
@@ -102,7 +105,16 @@ public class IndexResponse extends ActionResponse {
         out.writeSharedString(index);
         out.writeSharedString(type);
         out.writeString(id);
+        out.writeStringArray(shards);
         out.writeLong(version);
         out.writeBoolean(created);
+    }
+
+    public String[] getShards() {
+        return shards;
+    }
+
+    public void setShards(String[] shards) {
+        this.shards = shards;
     }
 }

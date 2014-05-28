@@ -36,6 +36,8 @@ import org.elasticsearch.cluster.block.ClusterBlockLevel;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.cluster.metadata.MetaData;
+import org.elasticsearch.cluster.node.DiscoveryNode;
+import org.elasticsearch.cluster.node.DiscoveryNodes;
 import org.elasticsearch.cluster.routing.ShardIterator;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
@@ -224,7 +226,13 @@ public class TransportIndexAction extends TransportShardReplicationOperationActi
 
         assert request.versionType().validateVersionForWrites(request.version());
 
-        IndexResponse response = new IndexResponse(request.index(), request.type(), request.id(), version, created);
+        final DiscoveryNodes nodes = clusterState.nodes();
+
+        DiscoveryNode shard1 = nodes.dataNodes().get(indexShard.routingEntry().currentNodeId());
+
+        String shards[] = { shard1.getHostAddress() };
+
+        IndexResponse response = new IndexResponse(request.index(), request.type(), request.id(), shards, version, created);
         return new PrimaryResponse<>(shardRequest.request, response, op);
     }
 
